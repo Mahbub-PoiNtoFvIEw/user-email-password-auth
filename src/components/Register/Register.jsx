@@ -1,8 +1,9 @@
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, sendEmailVerification, updateProfile } from 'firebase/auth';
 import React, { useState } from 'react';
 import auth from '../../firebase/firebase.config';
 import { FiEye } from "react-icons/fi";
 import { FiEyeOff } from "react-icons/fi";
+import { Link } from 'react-router-dom';
 
 const Register = () => {
     const [registerError, setRegisterError] = useState("");
@@ -12,6 +13,7 @@ const Register = () => {
 
     const handleRegister = e =>{
         e.preventDefault();
+        const name = e.target.name.value;
         const email = e.target.email.value;
         const password = e.target.password.value;
         const accepted = e.target.terms.checked;
@@ -42,6 +44,20 @@ const Register = () => {
         .then(result =>{
             console.log(result.user);
             setSuccessMessage("User Create Successfully");
+            // send verification mail
+            updateProfile(result.user, {
+                displayName: name
+            })
+            .then(()=>{
+                console.log('updated profile');
+            })
+            .catch(error =>{
+                console.error(error.message);
+            })
+            sendEmailVerification(result.user)
+            .then(() =>{
+                alert('check your email and verify your account');
+            })
         })
         .catch(error =>{
             console.error(error);
@@ -61,6 +77,7 @@ const Register = () => {
             <div className='mx-auto md:w-1/2 p-6 rounded-xl shadow-lg'>
                 <h2 className='text-3xl mb-3'>Please Register...!!</h2>
                 <form onSubmit={handleRegister}>
+                    <input className='mb-4 w-3/4 border p-3 rounded-xl' type="text" name='name' placeholder='Enter your name...' />
                     <input className='mb-4 w-3/4 border p-3 rounded-xl' type="email" name='email' placeholder='Enter your email...' required/>
                     <div className='relative'>
                         <input 
@@ -90,6 +107,7 @@ const Register = () => {
                 {
                     registerError && <p className='text-red-600 mt-3'>{registerError}</p>
                 }
+                <p className='mt-2'>Already have an account? please <Link className='text-green-600 font-bold' to={`/login`}>Login</Link></p>
             </div>
         </div>
     );
